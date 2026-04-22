@@ -1,0 +1,14 @@
+{
+    "img_size": [
+        150,
+        150
+    ],
+    "batch_size": 32,
+    "classes": [
+        "NORMAL",
+        "PNEUMONIA"
+    ],
+    "data_format": "channels_last",
+    "model_type": "CNN",
+    "framework": "tensorflow"
+}
