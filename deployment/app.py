@@ -9,13 +9,13 @@ import gdown
 app = Flask(__name__)
 
 # -----------------------------
-# SAFE BASE PATH
+# BASE PATH
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-CONFIG_PATH = os.path.join(BASE_DIR, "../config/config.json")
-LABELS_PATH = os.path.join(BASE_DIR, "../config/labels.txt")
-MODEL_PATH = os.path.join(BASE_DIR, "../model/xray_model.keras")
+CONFIG_PATH = os.path.join(BASE_DIR, "config", "config.json")
+LABELS_PATH = os.path.join(BASE_DIR, "config", "labels.txt")
+MODEL_PATH = os.path.join(BASE_DIR, "model", "xray_model.keras")
 
 # -----------------------------
 # LOAD CONFIG
@@ -29,28 +29,24 @@ with open(LABELS_PATH, "r") as f:
     labels = f.read().splitlines()
 
 # -----------------------------
-# LOAD MODEL (FROM GOOGLE DRIVE)
+# DOWNLOAD MODEL (ONLY IF NEEDED)
 # -----------------------------
-
-MODEL_PATH = "model/xray_model.keras"
-
-# Google Drive FILE ID (PUT YOUR REAL ID HERE)
 FILE_ID = "1N_cB6Sgp1qb6RH_EBt_wAI-zyUcEc3AE"
 URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
-# Create model folder
-os.makedirs("model", exist_ok=True)
+os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 
-# Download model if not present
 if not os.path.exists(MODEL_PATH):
-    print("Downloading model from Google Drive...")
+    print("Downloading model...")
     gdown.download(URL, MODEL_PATH, quiet=False)
 
-# Load model
+# -----------------------------
+# LOAD MODEL
+# -----------------------------
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # -----------------------------
-# PREPROCESS FUNCTION
+# PREPROCESS
 # -----------------------------
 def preprocess_image(image):
     image = image.resize(IMG_SIZE)
@@ -72,19 +68,17 @@ def predict():
         img = Image.open(file).convert("RGB")
 
         processed = preprocess_image(img)
+        pred = model.predict(processed)[0][0]
 
-        prediction = model.predict(processed)[0][0]
+        # FIXED confidence
+        confidence = pred if pred > 0.5 else (1 - pred)
 
-        result = labels[1] if prediction > 0.5 else labels[0]
+        result = labels[1] if pred > 0.5 else labels[0]
 
         return jsonify({
             "prediction": result,
-            "confidence": float(prediction)
+            "confidence": float(confidence)
         })
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-# -----------------------------
-# NO app.run() FOR PRODUCTION 
-# -----------------------------
