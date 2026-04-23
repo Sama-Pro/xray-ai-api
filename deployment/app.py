@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import json
 import os
+import gdown
 
 app = Flask(__name__)
 
@@ -28,8 +29,24 @@ with open(LABELS_PATH, "r") as f:
     labels = f.read().splitlines()
 
 # -----------------------------
-# LOAD MODEL
+# LOAD MODEL (FROM GOOGLE DRIVE)
 # -----------------------------
+
+MODEL_PATH = "model/xray_model.keras"
+
+# Google Drive FILE ID (PUT YOUR REAL ID HERE)
+FILE_ID = "1N_cB6Sgp1qb6RH_EBt_wAI-zyUcEc3AE"
+URL = f"https://drive.google.com/uc?id={FILE_ID}"
+
+# Create model folder
+os.makedirs("model", exist_ok=True)
+
+# Download model if not present
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model from Google Drive...")
+    gdown.download(URL, MODEL_PATH, quiet=False)
+
+# Load model
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # -----------------------------
