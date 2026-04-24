@@ -9,13 +9,13 @@ import gdown
 app = Flask(__name__)
 
 # -----------------------------
-# BASE PATH
+# BASE DIRECTORY (deployment/)
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-CONFIG_PATH = os.path.join(BASE_DIR, "config", "config.json")
-LABELS_PATH = os.path.join(BASE_DIR, "config", "labels.txt")
-MODEL_PATH = os.path.join(BASE_DIR, "model", "xray_model.keras")
+# Move OUT of deployment → access root folders
+CONFIG_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "config", "config.json"))
+MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "xray_model.keras"))
 
 # -----------------------------
 # LOAD CONFIG
@@ -24,29 +24,30 @@ with open(CONFIG_PATH) as f:
     config = json.load(f)
 
 IMG_SIZE = tuple(config["img_size"])
-
-with open(LABELS_PATH, "r") as f:
-    labels = f.read().splitlines()
+labels = config["classes"]
 
 # -----------------------------
-# DOWNLOAD MODEL (ONLY IF NEEDED)
+# GOOGLE DRIVE MODEL DOWNLOAD
 # -----------------------------
-FILE_ID = "1N_cB6Sgp1qb6RH_EBt_wAI-zyUcEc3AE"
-URL = f"https://drive.google.com/uc?id={FILE_ID}"
+FILE_ID = "1UhprCQ9-PuqkOVScso5S6GqHJQ-k1FRR"
+DOWNLOAD_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
+# Ensure model folder exists
 os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 
+# Download model if not already present
 if not os.path.exists(MODEL_PATH):
-    print("Downloading model...")
-    gdown.download(URL, MODEL_PATH, quiet=False)
+    print("Downloading model from Google Drive...")
+    gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False)
 
 # -----------------------------
 # LOAD MODEL
 # -----------------------------
 model = tf.keras.models.load_model(MODEL_PATH)
+print("Model loaded successfully")
 
 # -----------------------------
-# PREPROCESS
+# IMAGE PREPROCESSING
 # -----------------------------
 def preprocess_image(image):
     image = image.resize(IMG_SIZE)
@@ -68,12 +69,12 @@ def predict():
         img = Image.open(file).convert("RGB")
 
         processed = preprocess_image(img)
-        pred = model.predict(processed)[0][0]
+        prediction = model.predict(processed)[0][0]
 
-        # FIXED confidence
-        confidence = pred if pred > 0.5 else (1 - pred)
+        # Calculate confidence properly
+        confidence = prediction if prediction > 0.5 else (1 - prediction)
 
-        result = labels[1] if pred > 0.5 else labels[0]
+        result = labels[1] if prediction > 0.5 else labels[0]
 
         return jsonify({
             "prediction": result,
