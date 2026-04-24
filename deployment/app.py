@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Move OUT of deployment → access root folders
 CONFIG_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "config", "config.json"))
-MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "xray_model.h5"))
+MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "xray_model_clean.h5"))
 
 # -----------------------------
 # LOAD CONFIG
@@ -29,7 +29,7 @@ labels = config["classes"]
 # -----------------------------
 # GOOGLE DRIVE MODEL DOWNLOAD
 # -----------------------------
-FILE_ID = "1nw7rVa6DyreiO_HM0NuVomklR8-XoTro" 
+FILE_ID = "11dolXa13dFeErsoRhn5nBl0w6GOyv8Jv" 
 DOWNLOAD_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
 # Ensure model folder exists
@@ -43,7 +43,7 @@ if not os.path.exists(MODEL_PATH):
 # -----------------------------
 # LOAD MODEL
 # -----------------------------
-model = tf.keras.models.load_model(MODEL_PATH)
+model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 print("Model loaded successfully")
 
 # -----------------------------
