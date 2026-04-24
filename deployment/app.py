@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Move OUT of deployment → access root folders
 CONFIG_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "config", "config.json"))
-MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "xray_model_clean.h5"))
+MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "model", "weights.weights.h5"))
 
 # -----------------------------
 # LOAD CONFIG
@@ -29,7 +29,7 @@ labels = config["classes"]
 # -----------------------------
 # GOOGLE DRIVE MODEL DOWNLOAD
 # -----------------------------
-FILE_ID = "11dolXa13dFeErsoRhn5nBl0w6GOyv8Jv" 
+FILE_ID = "14kzbIJ9TtK3Ch1MJdh0rErtRHdsvK3Ch" 
 DOWNLOAD_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
 # Ensure model folder exists
@@ -43,8 +43,29 @@ if not os.path.exists(MODEL_PATH):
 # -----------------------------
 # LOAD MODEL
 # -----------------------------
-model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-print("Model loaded successfully")
+# -----------------------------
+# BUILD MODEL ARCHITECTURE
+# -----------------------------
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(150,150,3)),
+
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+
+    tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid')
+])
+
+# -----------------------------
+# LOAD WEIGHTS
+# -----------------------------
+model.load_weights(MODEL_PATH)
+
+print("Model loaded successfully (weights)")
 
 # -----------------------------
 # IMAGE PREPROCESSING
